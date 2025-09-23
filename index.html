@@ -325,6 +325,63 @@
             color: var(--primary-color);
         }
 
+        #target-image-canvas {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            gap: 2px;
+            background-color: #333;
+            border: 2px solid #444;
+            margin: 0 auto;
+        }
+
+        #binary-image-output {
+            grid-template-rows: repeat(8, 1fr);
+            align-items: center;
+        }
+
+        #binary-image-output input {
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            font-family: monospace;
+            font-size: 0.8rem;
+            border: 1px solid #444;
+            background-color: #2a2a2a;
+            color: var(--text-color);
+            padding: 0;
+            margin: 0;
+            height: 100%;
+        }
+        
+        /* Remove arrows from number input in binary image grid */
+        #binary-image-output input::-webkit-outer-spin-button,
+        #binary-image-output input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        #binary-image-output input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        #binary-image-legend .color-swatch {
+            cursor: default;
+        }
+        #binary-image-legend .color-swatch.selected {
+            transform: none;
+            box-shadow: none;
+            border-color: transparent;
+        }
+        .color-legend-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
     </style>
 </head>
 <body>
@@ -440,31 +497,37 @@
             </div>
         </div>
 
-        <!-- Simulador de Imagem -->
+        <!-- Jogo: Arte Binária -->
         <div class="card-panel z-depth-2">
-            <h2 class="center-align">Simulador de Imagem Binária</h2>
-            <p class="center-align flow-text">Desenhe uma imagem 8x8. Cada cor de pixel é representada por uma sequência de 3 bits.</p>
-            
-            <div class="color-palette"></div>
+            <h2 class="center-align">Jogo: Arte Binária</h2>
+            <p class="center-align flow-text">Recrie a imagem! Digite o código binário de 3 bits para cada cor nos campos à direita para colorir a tela de desenho à esquerda.</p>
+
+            <!-- Legenda de Cores -->
+            <div id="binary-image-legend" class="color-palette"></div>
 
             <div class="row center-align" style="margin-top: 30px;">
-                <div class="col s12 m6">
-                    <h5>Canvas de Desenho</h5>
+                <!-- Tela de Desenho do Usuário (Esquerda) -->
+                <div class="col s12 m4">
+                    <h5>Sua Tela</h5>
                     <div id="pixel-canvas"></div>
                 </div>
-                <div class="col s12 m6">
-                    <h5>Representação Binária</h5>
+                <!-- Imagem de Alvo (Meio) -->
+                <div class="col s12 m4">
+                    <h5>Imagem Alvo (Nível <span id="imageLevelDisplay">1</span>)</h5>
+                    <div id="target-image-canvas"></div>
+                </div>
+                <!-- Entrada Binária (Direita) -->
+                <div class="col s12 m4">
+                    <h5>Códigos Binários</h5>
                     <div id="binary-image-output"></div>
                 </div>
             </div>
 
+            <div id="imageGameFeedback" class="center-align" style="min-height: 30px; margin-top: 15px; font-size: 1.2rem; font-weight: bold;"></div>
+
             <div class="center-align button-group" style="margin-top: 30px;">
-                <button id="clear-canvas-btn" class="btn-large waves-effect waves-light red darken-2">
-                    <i class="material-icons left">delete</i>Limpar
-                </button>
-                <button id="download-image-btn" class="btn-large waves-effect waves-light blue darken-2">
-                    <i class="material-icons left">download</i>Download
-                </button>
+                <button id="checkImageGameBtn" class="btn-large waves-effect waves-light blue"><i class="material-icons left">check</i>Verificar</button>
+                <button id="nextImageGameBtn" class="btn-large waves-effect waves-light green hidden"><i class="material-icons left">arrow_forward</i>Próximo Nível</button>
             </div>
         </div>
 
@@ -692,112 +755,173 @@
                 binaryResult.textContent = `Resultado: ${decimalToBinary(resultDecimal)}`;
             }
 
-            // Image Simulator Functions
-            function initImageSimulator() {
+            // --- Jogo: Arte Binária ---
+            const imageGameLevelData = [
+                // Nível 1: Smiley Face
+                [
+                    '000','000','101','101','101','101','000','000',
+                    '000','101','000','000','000','000','101','000',
+                    '101','000','101','000','000','101','000','101',
+                    '101','000','000','000','000','000','000','101',
+                    '101','000','101','000','000','101','000','101',
+                    '101','000','000','101','101','000','000','101',
+                    '000','101','000','000','000','000','101','000',
+                    '000','000','101','101','101','101','000','000',
+                ],
+                // Nível 2: Coração
+                [
+                    '001','001','010','010','001','010','010','001',
+                    '001','010','010','010','010','010','010','010',
+                    '010','010','010','010','010','010','010','010',
+                    '010','010','010','010','010','010','010','010',
+                    '001','010','010','010','010','010','010','001',
+                    '001','001','010','010','010','010','001','001',
+                    '001','001','001','010','010','001','001','001',
+                    '001','001','001','001','001','001','001','001',
+                ],
+                // Nível 3: "HI"
+                [
+                    '001','001','001','001','001','001','001','001',
+                    '001','100','001','100','001','100','100','100',
+                    '001','100','001','100','001','100','001','001',
+                    '001','100','100','100','001','100','100','100',
+                    '001','100','001','100','001','100','001','001',
+                    '001','100','001','100','001','100','001','001',
+                    '001','100','001','100','001','100','100','100',
+                    '001','001','001','001','001','001','001','001',
+                ],
+                // Nível 4: Casa
+                [
+                    '111','111','111','010','010','111','111','111',
+                    '111','111','010','010','010','010','111','111',
+                    '111','010','010','010','010','010','010','111',
+                    '111','101','101','101','101','101','101','111',
+                    '111','101','100','100','100','100','101','111',
+                    '111','101','100','001','001','100','101','111',
+                    '111','101','100','100','100','100','101','111',
+                    '111','111','111','111','111','111','111','111',
+                ],
+                // Nível 5: Padrão Aleatório
+                [
+                    '110','111','000','010','101','000','110','111',
+                    '111','000','010','101','000','110','111','000',
+                    '000','010','101','000','110','111','000','010',
+                    '010','101','000','110','111','000','010','101',
+                    '101','000','110','111','000','010','101','000',
+                    '000','110','111','000','010','101','000','110',
+                    '110','111','000','010','101','000','110','111',
+                    '111','000','010','101','000','110','111','000',
+                ]
+            ];
+            let currentImageLevel = 0;
+            let userBinaryInputs = Array(64).fill("000");
+
+            const imageLevelDisplay = document.getElementById('imageLevelDisplay');
+            const targetImageCanvas = document.getElementById('target-image-canvas');
+            const imageGameFeedback = document.getElementById('imageGameFeedback');
+            const checkImageGameBtn = document.getElementById('checkImageGameBtn');
+            const nextImageGameBtn = document.getElementById('nextImageGameBtn');
+            const binaryImageLegend = document.getElementById('binary-image-legend');
+
+            function startImageGame() {
+                createColorLengend();
+                startImageLevel();
+                checkImageGameBtn.addEventListener('click', checkImageAnswer);
+                nextImageGameBtn.addEventListener('click', () => {
+                    currentImageLevel = (currentImageLevel + 1) % imageGameLevelData.length;
+                    startImageLevel();
+                });
+            }
+
+            function startImageLevel() {
+                imageLevelDisplay.textContent = currentImageLevel + 1;
+                userBinaryInputs.fill("000");
+                imageGameFeedback.textContent = '';
+                nextImageGameBtn.classList.add('hidden');
+                renderTargetImage();
+                renderUserCanvas();
+                renderBinaryInputs();
+            }
+
+            function createColorLengend() {
+                binaryImageLegend.innerHTML = '';
                 colorPalette.forEach(color => {
+                    const legendItem = document.createElement('div');
+                    legendItem.className = 'color-legend-item';
+                    
                     const swatch = document.createElement('div');
                     swatch.className = 'color-swatch';
                     swatch.style.backgroundColor = color.hex;
-                    swatch.dataset.color = color.hex;
-                    swatch.dataset.binary = color.binary;
-                    swatch.addEventListener('click', selectColor);
-                    colorPaletteContainer.appendChild(swatch);
-                });
+                    
+                    const code = document.createElement('span');
+                    code.textContent = color.binary;
 
-                generatePixelGrid();
-                updateBinaryOutputFromPixels();
-                
-                clearCanvasBtn.addEventListener('click', clearCanvas);
-                downloadImageBtn.addEventListener('click', downloadImage);
-                
-                colorPaletteContainer.firstChild.click();
+                    legendItem.appendChild(swatch);
+                    legendItem.appendChild(code);
+                    binaryImageLegend.appendChild(legendItem);
+                });
             }
 
-            function generatePixelGrid() {
-                pixelCanvas.innerHTML = '';
-                for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+            function renderTargetImage() {
+                targetImageCanvas.innerHTML = '';
+                const levelData = imageGameLevelData[currentImageLevel];
+                levelData.forEach(binaryCode => {
                     const pixel = document.createElement('div');
                     pixel.className = 'pixel';
-                    pixel.dataset.color = '#000000';
-                    pixel.dataset.binary = '000';
-                    pixel.addEventListener('click', togglePixel);
+                    const color = colorPalette.find(c => c.binary === binaryCode)?.hex || '#000000';
+                    pixel.style.backgroundColor = color;
+                    targetImageCanvas.appendChild(pixel);
+                });
+            }
+
+            function renderUserCanvas() {
+                pixelCanvas.innerHTML = '';
+                userBinaryInputs.forEach(binaryCode => {
+                    const pixel = document.createElement('div');
+                    pixel.className = 'pixel';
+                    const color = colorPalette.find(c => c.binary === binaryCode)?.hex || '#000000';
+                    pixel.style.backgroundColor = color;
                     pixelCanvas.appendChild(pixel);
-                }
+                });
             }
 
-            function updateBinaryOutputFromPixels() {
+            function renderBinaryInputs() {
                 binaryImageOutput.innerHTML = '';
-                const pixels = pixelCanvas.children;
-                for (let i = 0; i < pixels.length; i++) {
-                    const binaryChar = document.createElement('span');
-                    binaryChar.className = 'binary-char';
-                    binaryChar.textContent = pixels[i].dataset.binary || '000';
-                    binaryChar.dataset.index = i;
-                    binaryChar.addEventListener('click', toggleBinaryChar);
-                    binaryImageOutput.appendChild(binaryChar);
+                for (let i = 0; i < 64; i++) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.maxLength = 3;
+                    input.dataset.index = i;
+                    input.value = userBinaryInputs[i];
+                    input.addEventListener('input', (e) => handleBinaryInputChange(i, e.target.value));
+                    binaryImageOutput.appendChild(input);
                 }
             }
 
-            function togglePixel(event) {
-                const pixel = event.target;
-                pixel.style.backgroundColor = selectedColorHex;
-                pixel.dataset.color = selectedColorHex;
-                pixel.dataset.binary = selectedColorBinary;
-                updateBinaryOutputFromPixels();
-            }
-            
-            function toggleBinaryChar(event) {
-                const binaryChar = event.target;
-                const index = parseInt(binaryChar.dataset.index);
-                const pixel = pixelCanvas.children[index];
-
-                const currentColorIndex = colorPalette.findIndex(c => c.binary === binaryChar.textContent);
-                const nextColorIndex = (currentColorIndex + 1) % colorPalette.length;
-                const nextColor = colorPalette[nextColorIndex];
-
-                binaryChar.textContent = nextColor.binary;
-                pixel.style.backgroundColor = nextColor.hex;
-                pixel.dataset.color = nextColor.hex;
-                pixel.dataset.binary = nextColor.binary;
-            }
-
-            function clearCanvas() {
-                const pixels = pixelCanvas.children;
-                for (let i = 0; i < pixels.length; i++) {
-                    pixels[i].style.backgroundColor = '#000000';
-                    pixels[i].dataset.color = '#000000';
-                    pixels[i].dataset.binary = '000';
+            function handleBinaryInputChange(index, value) {
+                if (/^[01]{3}$/.test(value)) {
+                    userBinaryInputs[index] = value;
+                    renderUserCanvas(); // Re-render the user's canvas to show the new color
+                } else if (value.length >= 3) {
+                    // Optional: provide feedback for invalid input
                 }
-                updateBinaryOutputFromPixels();
             }
 
-            function selectColor(event) {
-                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
-                event.target.classList.add('selected');
-                selectedColorHex = event.target.dataset.color;
-                selectedColorBinary = event.target.dataset.binary;
-            }
+            function checkImageAnswer() {
+                const targetData = imageGameLevelData[currentImageLevel];
+                const isCorrect = JSON.stringify(userBinaryInputs) === JSON.stringify(targetData);
 
-            function downloadImage() {
-                const tempCanvas = document.createElement('canvas');
-                const ctx = tempCanvas.getContext('2d');
-                const canvasSize = GRID_SIZE * PIXEL_SIZE_FOR_DOWNLOAD;
-                tempCanvas.width = canvasSize;
-                tempCanvas.height = canvasSize;
-
-                const pixels = pixelCanvas.children;
-                for (let i = 0; i < pixels.length; i++) {
-                    const pixel = pixels[i];
-                    const x = (i % GRID_SIZE) * PIXEL_SIZE_FOR_DOWNLOAD;
-                    const y = Math.floor(i / GRID_SIZE) * PIXEL_SIZE_FOR_DOWNLOAD;
-                    ctx.fillStyle = pixel.dataset.color || '#000000';
-                    ctx.fillRect(x, y, PIXEL_SIZE_FOR_DOWNLOAD, PIXEL_SIZE_FOR_DOWNLOAD);
+                if (isCorrect) {
+                    imageGameFeedback.textContent = 'Correto! Você é um artista binário!';
+                    imageGameFeedback.style.color = 'green';
+                    nextImageGameBtn.classList.remove('hidden');
+                    if (currentImageLevel === imageGameLevelData.length - 1) {
+                        nextImageGameBtn.textContent = 'Jogar Novamente';
+                    }
+                } else {
+                    imageGameFeedback.textContent = 'Incorreto. Continue tentando!';
+                    imageGameFeedback.style.color = 'red';
                 }
-
-                const link = document.createElement('a');
-                link.download = 'imagem-binaria.png';
-                link.href = tempCanvas.toDataURL('image/png');
-                link.click();
             }
 
             // Game Logic
@@ -1075,7 +1199,7 @@
 
             // Inicialização
             startNewNumberGame();
-            initImageSimulator();
+            startImageGame();
             resetGame(); // Initial reset to set up game UI correctly
             generateAsciiTable(); // Generate ASCII table on load
             // M.Modal.init(asciiModal); // Moved inside setTimeout

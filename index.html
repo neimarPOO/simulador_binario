@@ -831,6 +831,7 @@
                     currentImageLevel = (currentImageLevel + 1) % imageGameLevelData.length;
                     startImageLevel();
                 });
+                binaryImageOutput.addEventListener('keydown', handleGridNavigation);
             }
 
             function startImageLevel() {
@@ -894,6 +895,7 @@
                     input.dataset.index = i;
                     input.value = userBinaryInputs[i];
                     input.addEventListener('input', (e) => handleBinaryInputChange(i, e.target.value));
+                    input.addEventListener('focus', (e) => e.target.select());
                     binaryImageOutput.appendChild(input);
                 }
             }
@@ -904,6 +906,38 @@
                     renderUserCanvas(); // Re-render the user's canvas to show the new color
                 } else if (value.length >= 3) {
                     // Optional: provide feedback for invalid input
+                }
+            }
+
+            function handleGridNavigation(event) {
+                if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+                    return;
+                }
+                event.preventDefault();
+
+                const currentIndex = parseInt(event.target.dataset.index);
+                let nextIndex = -1;
+
+                switch (event.key) {
+                    case 'ArrowRight':
+                        if ((currentIndex + 1) % 8 !== 0) nextIndex = currentIndex + 1;
+                        break;
+                    case 'ArrowLeft':
+                        if (currentIndex % 8 !== 0) nextIndex = currentIndex - 1;
+                        break;
+                    case 'ArrowDown':
+                        if (currentIndex < 56) nextIndex = currentIndex + 8;
+                        break;
+                    case 'ArrowUp':
+                        if (currentIndex >= 8) nextIndex = currentIndex - 8;
+                        break;
+                }
+
+                if (nextIndex !== -1) {
+                    const nextInput = binaryImageOutput.querySelector(`input[data-index='${nextIndex}']`);
+                    if (nextInput) {
+                        nextInput.focus();
+                    }
                 }
             }
 

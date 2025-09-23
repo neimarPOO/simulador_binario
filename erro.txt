@@ -1,4 +1,0 @@
-Uncaught ReferenceError: updateCharVisualizer is not defined
-    at HTMLDocument.<anonymous> (simulador_binario.html:991:49)
-(anônimo) @ simulador_binario.html:991Entenda o erro
-favicon.ico:1  GET http://127.0.0.1:5500/favicon.ico 404 (Not Found)

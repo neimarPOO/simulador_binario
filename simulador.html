@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Sistema Binário</title>
+    
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+        :root {
+            --background-color: #121212;
+            --card-color: #1e1e1e;
+            --text-color: #E0E0E0;
+            --primary-color: #2962ff; /* Um azul vibrante do Materialize */
+            --accent-color: #feda75; /* Mantendo o amarelo para destaque */
+            --bulb-on-glow: 0 0 15px var(--accent-color), 0 0 25px var(--accent-color);
+            --bulb-off-color: #424242;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card-panel {
+            background-color: var(--card-color);
+        }
+
+        h1, h2, h3, h4 {
+            color: var(--accent-color);
+            font-weight: 300; /* Fonte mais leve, padrão do Material Design */
+        }
+
+        h1 {
+            font-size: 2.8rem;
+        }
+
+        h2 {
+            font-size: 2.2rem;
+        }
+
+        .app-logo {
+            max-width: 200px;
+            margin: 20px auto;
+            display: block;
+        }
+
+        /* Ajustes nos inputs do Materialize */
+        .input-field label {
+            color: var(--accent-color);
+        }
+        .input-field input[type=number],
+        .input-field input[type=text] {
+            color: var(--text-color);
+            text-align: center;
+            font-size: 1.5rem !important;
+        }
+        .input-field input[type=number]:focus + label,
+        .input-field input[type=text]:focus + label {
+            color: var(--primary-color) !important;
+        }
+        .input-field input[type=number]:focus,
+        .input-field input[type=text]:focus {
+            border-bottom: 1px solid var(--primary-color) !important;
+            box-shadow: 0 1px 0 0 var(--primary-color) !important;
+        }
+
+        .binary-visualizer {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 20px 5px;
+            border-radius: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .bit-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 50px;
+        }
+
+        .bit-value {
+            font-size: 2rem;
+            font-weight: 500;
+            color: var(--accent-color);
+        }
+
+        .bulb {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 10px 0;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .bulb.on {
+            background-color: var(--accent-color);
+            box-shadow: var(--bulb-on-glow);
+        }
+
+        .bulb.off {
+            background-color: var(--bulb-off-color);
+        }
+
+        .place-value {
+            font-size: 0.9rem;
+            color: #9e9e9e; /* Cinza do Materialize */
+        }
+
+        #char-binary-output {
+            font-family: monospace;
+            font-size: 1.2rem;
+            word-break: break-all;
+            line-height: 1.8;
+            min-height: 50px;
+            text-align: center;
+            background-color: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .color-palette {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .color-swatch {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .color-swatch.selected {
+            transform: scale(1.2);
+            box-shadow: 0 0 12px var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        #pixel-canvas {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 100%;
+            max-width: 300px; /* Limita o tamanho máximo */
+            aspect-ratio: 1 / 1; /* Mantém o canvas quadrado */
+            gap: 2px;
+            background-color: #333;
+            border: 2px solid #444;
+            margin: 0 auto; /* Centraliza */
+        }
+
+        .pixel {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            background-color: #000;
+            transition: background-color 0.2s;
+        }
+
+        #binary-image-output {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            width: 100%;
+            max-width: 300px;
+            aspect-ratio: 1 / 1;
+            gap: 2px;
+            margin: 0 auto;
+        }
+
+        .binary-char {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            font-size: 1rem;
+            color: var(--text-color);
+            background-color: #333;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .explanation ul li {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        
+        .button-group .btn-large {
+            margin: 5px;
+        }
+
+        /* Remove arrows from number input */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .binary-calculator-result {
+            font-family: monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-top: 20px;
+            padding: 10px;
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 5px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Game specific styles */
+        #game-container {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: rgba(0,0,0,0.2);
+        }
+
+        #game-controls, #game-challenge, #game-progress, #game-feedback-area {
+            margin-bottom: 20px;
+        }
+
+        #binaryCharDisplay {
+            font-family: monospace;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            padding: 10px;
+            background-color: var(--background-color);
+            border-radius: 5px;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        #decodedPhraseDisplay {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: var(--accent-color);
+            min-height: 40px;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: var(--background-color);
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        #gameFeedback {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        #congratulationsMessage {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-top: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Modal specific styles */
+        .modal {
+            background-color: var(--card-color);
+            color: var(--text-color);
+        }
+        .modal .modal-content h4 {
+            color: var(--accent-color);
+        }
+        .modal .modal-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .modal .modal-content th,
+        .modal .modal-content td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #424242; /* Darker border for table */
+            color: var(--text-color);
+        }
+        .modal .modal-content th {
+            background-color: #2a2a2a;
+            font-weight: bold;
+        }
+        .modal .modal-content .scrollable-table {
+            max-height: 400px; /* Fixed height for scrolling */
+            overflow-y: auto;
+            display: block; /* Important for overflow to work */
+        }
+        .modal .modal-content .scrollable-table table {
+            margin-bottom: 0; /* Remove extra margin from table inside scrollable div */
+        }
+        .modal .modal-footer {
+            background-color: var(--card-color);
+            border-top: 1px solid #424242;
+        }
+        .modal .modal-footer .btn-flat {
+            color: var(--primary-color);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <img src="logo.png" alt="Logo" class="app-logo">
+        <h1 class="center-align">Simulador Binário</h1>
+
+        <!-- Jogo Decimal-Binário -->
+        <div class="card-panel z-depth-2">
+            <h2 class="center-align">Jogo: Decimal para Binário</h2>
+            <p class="center-align flow-text">
+                Clique nas lâmpadas para formar o número binário correspondente ao número decimal apresentado.
+            </p>
+            <div class="row center-align" style="margin-top: 20px;">
+                <h4 class="col s12">Converta este número para binário:</h4>
+                <div id="targetNumberDisplay" class="col s12" style="font-size: 3rem; font-weight: bold; color: var(--primary-color);">128</div>
+            </div>
+            <div id="visualizer" class="binary-visualizer"></div>
+            <div id="numberGameFeedback" class="center-align" style="min-height: 30px; margin-top: 15px; font-size: 1.2rem; font-weight: bold;"></div>
+            <div class="row center-align" style="margin-top: 20px;">
+                <button id="checkNumberGameBtn" class="btn-large waves-effect waves-light blue"><i class="material-icons left">check</i>Verificar</button>
+                <button id="nextNumberGameBtn" class="btn-large waves-effect waves-light green"><i class="material-icons left">arrow_forward</i>Próximo</button>
+            </div>
+
+            <div class="divider" style="margin: 40px 0;"></div>
+
+            <h3 class="center-align">Calculadora Binária</h3>
+            <p class="center-align flow-text">Realize operações básicas com números binários.</p>
+            <div class="row">
+                <div class="input-field col s12 m5">
+                    <input id="binaryInput1" type="text" value="0">
+                    <label for="binaryInput1">Binário 1</label>
+                </div>
+                <div class="input-field col s12 m5 offset-m2">
+                    <input id="binaryInput2" type="text" value="0">
+                    <label for="binaryInput2">Binário 2</label>
+                </div>
+            </div>
+            <div class="row center-align">
+                <button id="addBtn" class="btn-floating btn-large waves-effect waves-light blue"><i class="material-icons">add</i></button>
+                <button id="subtractBtn" class="btn-floating btn-large waves-effect waves-light blue"><i class="material-icons">remove</i></button>
+                <button id="multiplyBtn" class="btn-floating btn-large waves-effect waves-light blue"><i class="material-icons">close</i></button>
+                <button id="divideBtn" class="btn-floating btn-large waves-effect waves-light blue"><i class="material-icons">divide</i></button>
+            </div>
+            <div class="binary-calculator-result" id="binaryResult">Resultado: 0</div>
+        </div>
+
+        <!-- Simulador de Texto / Jogo -->
+        <div class="card-panel z-depth-2">
+            <h2 class="center-align">Jogo: Mensagem Secreta</h2>
+            <p class="center-align flow-text">Decodifique a mensagem secreta! Use a tabela ASCII para encontrar o valor decimal de cada caractere binário.</p>
+            
+            <!-- Seção do Simulador de Texto Normal -->
+            <div id="text-simulator-normal" class="hidden">
+                <div class="row">
+                    <div class="input-field col s12 m8 offset-m2">
+                        <input id="charInput" type="text">
+                        <label for="charInput">Texto</label>
+                    </div>
+                </div>
+                <div id="char-binary-output"></div>
+            </div>
+
+            <div class="center-align" style="margin-top: 20px;">
+                <button id="toggleGameBtn" class="btn waves-effect waves-light blue darken-1">
+                    <i class="material-icons left">text_fields</i>Conversor de Texto
+                </button>
+            </div>
+
+            <!-- Seção do Jogo de Decodificação -->
+            <div id="game-container">
+                <h3 class="center-align">Jogo: Mensagem Secreta</h3>
+                <div id="game-controls" class="center-align">
+                    <p>Nível: <span id="levelDisplay">1/3</span> | Tempo: <span id="timerDisplay">00:00</span></p>
+                    <button id="startGameBtn" class="btn-large waves-effect waves-light green darken-1">
+                        <i class="material-icons left">play_arrow</i>Iniciar Jogo
+                    </button>
+                    <button id="resetGameBtn" class="btn-large waves-effect waves-light red darken-1 hidden">
+                        <i class="material-icons left">refresh</i>Reiniciar Jogo
+                    </button>
+                </div>
+
+                <div id="game-challenge" class="center-align hidden">
+                    <h5>Decodifique o caractere:</h5>
+                    <div id="binaryCharDisplay"></div>
+                    <div class="row">
+                        <div class="input-field col s12 m6 offset-m3">
+                            <input id="decimalInputForGame" type="number" min="0" max="255">
+                            <label for="decimalInputForGame">Valor Decimal</label>
+                        </div>
+                    </div>
+                    <button id="submitDecimalBtn" class="btn waves-effect waves-light blue">
+                        <i class="material-icons left">check</i>Verificar
+                    </button>
+                    <button data-target="ascii-modal" class="btn waves-effect waves-light grey darken-1 modal-trigger" style="margin-left: 10px;">
+                        <i class="material-icons left">help_outline</i>Tabela ASCII
+                    </button>
+                </div>
+
+                <div id="game-progress" class="center-align hidden">
+                    <h5>Frase Decodificada:</h5>
+                    <div id="decodedPhraseDisplay"></div>
+                </div>
+
+                <div id="game-feedback-area" class="center-align">
+                    <p id="gameFeedback" class="flow-text"></p>
+                    <h4 id="congratulationsMessage" class="hidden"></h4>
+                    <button id="nextLevelBtn" class="btn-large waves-effect waves-light orange hidden">
+                        <i class="material-icons left">skip_next</i>Próximo Nível
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Simulador de Imagem -->
+        <div class="card-panel z-depth-2">
+            <h2 class="center-align">Simulador de Imagem Binária</h2>
+            <p class="center-align flow-text">Desenhe uma imagem 8x8. Cada cor de pixel é representada por uma sequência de 3 bits.</p>
+            
+            <div class="color-palette"></div>
+
+            <div class="row center-align" style="margin-top: 30px;">
+                <div class="col s12 m6">
+                    <h5>Canvas de Desenho</h5>
+                    <div id="pixel-canvas"></div>
+                </div>
+                <div class="col s12 m6">
+                    <h5>Representação Binária</h5>
+                    <div id="binary-image-output"></div>
+                </div>
+            </div>
+
+            <div class="center-align button-group" style="margin-top: 30px;">
+                <button id="clear-canvas-btn" class="btn-large waves-effect waves-light red darken-2">
+                    <i class="material-icons left">delete</i>Limpar
+                </button>
+                <button id="download-image-btn" class="btn-large waves-effect waves-light blue darken-2">
+                    <i class="material-icons left">download</i>Download
+                </button>
+            </div>
+        </div>
+
+        <!-- Explicação -->
+        <div class="card-panel z-depth-2">
+            <h4>Como Funciona?</h4>
+            <p>Dentro de um processador, milhões de interruptores minúsculos chamados <strong>transistores</strong> controlam o fluxo de eletricidade.</p>
+            <ul>
+                <li>Quando um bit é <strong>1</strong>, o transistor está <strong>ligado</strong>, permitindo a passagem de corrente (sinal de alta tensão).</li>
+                <li>Quando um bit é <strong>0</strong>, o transistor está <strong>desligado</strong>, bloqueando a corrente (sinal de baixa tensão).</li>
+            </ul>
+            <p>Combinando bilhões desses sinais, os computadores executam todas as tarefas complexas que conhecemos.</p>
+        </div>
+    </div>
+
+    <!-- Modal Structure -->
+    <div id="ascii-modal" class="modal">
+        <div class="modal-content">
+            <h4>Tabela ASCII</h4>
+            <div id="ascii-table-content" class="scrollable-table"></div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close waves-effect waves-green btn-flat">Fechar</a>
+        </div>
+    </div>
+
+    <!-- Materialize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add a small delay to ensure Materialize is fully loaded
+            setTimeout(function() {
+                if (typeof M !== 'undefined') {
+                    M.AutoInit();
+                    M.Modal.init(document.getElementById('ascii-modal')); // Initialize Materialize modal
+                } else {
+                    console.error("Materialize CSS (M) object not found. Check if materialize.min.js loaded correctly.");
+                }
+            }, 100); // 100ms delay
+
+            const visualizer = document.getElementById('visualizer');
+            const charInput = document.getElementById('charInput');
+            const charBinaryOutput = document.getElementById('char-binary-output');
+            const pixelCanvas = document.getElementById('pixel-canvas');
+            const binaryImageOutput = document.getElementById('binary-image-output');
+            const clearCanvasBtn = document.getElementById('clear-canvas-btn');
+            const downloadImageBtn = document.getElementById('download-image-btn');
+            const colorPaletteContainer = document.querySelector('.color-palette');
+
+            // --- Start of Number Game Logic ---
+            const targetNumberDisplay = document.getElementById('targetNumberDisplay');
+            const numberGameFeedback = document.getElementById('numberGameFeedback');
+            const checkNumberGameBtn = document.getElementById('checkNumberGameBtn');
+            const nextNumberGameBtn = document.getElementById('nextNumberGameBtn');
+
+            let targetNumber = 0;
+            let userBinaryArray = [0, 0, 0, 0, 0, 0, 0, 0];
+
+            function startNewNumberGame() {
+                targetNumber = Math.floor(Math.random() * 256);
+                targetNumberDisplay.textContent = targetNumber;
+                userBinaryArray = [0, 0, 0, 0, 0, 0, 0, 0];
+                numberGameFeedback.textContent = '';
+                renderInteractiveBulbs();
+            }
+
+            function renderInteractiveBulbs() {
+                const binaryString = userBinaryArray.join('');
+                createBinaryVisualization(visualizer, binaryString);
+                
+                const bitContainers = visualizer.querySelectorAll('.bit-container');
+                bitContainers.forEach((container, index) => {
+                    container.style.cursor = 'pointer';
+                    container.addEventListener('click', () => toggleBit(index));
+                });
+            }
+
+            function toggleBit(index) {
+                userBinaryArray[index] = userBinaryArray[index] === 0 ? 1 : 0;
+                renderInteractiveBulbs();
+            }
+
+            function checkNumberGame() {
+                const userDecimal = parseInt(userBinaryArray.join(''), 2);
+                if (userDecimal === targetNumber) {
+                    numberGameFeedback.textContent = 'Correto! Parabéns!';
+                    numberGameFeedback.style.color = 'green';
+                } else {
+                    numberGameFeedback.textContent = `Incorreto. Tente novamente!`;
+                    numberGameFeedback.style.color = 'red';
+                }
+            }
+
+            checkNumberGameBtn.addEventListener('click', checkNumberGame);
+            nextNumberGameBtn.addEventListener('click', startNewNumberGame);
+            // --- End of Number Game Logic ---
+
+            // Binary Calculator elements
+            const binaryInput1 = document.getElementById('binaryInput1');
+            const binaryInput2 = document.getElementById('binaryInput2');
+            const addBtn = document.getElementById('addBtn');
+            const subtractBtn = document.getElementById('subtractBtn');
+            const multiplyBtn = document.getElementById('multiplyBtn');
+            const divideBtn = document.getElementById('divideBtn');
+            const binaryResult = document.getElementById('binaryResult');
+
+            // Game elements
+            const gameContainer = document.getElementById('game-container');
+            const textSimulatorNormal = document.getElementById('text-simulator-normal');
+            const toggleGameBtn = document.getElementById('toggleGameBtn');
+            const startGameBtn = document.getElementById('startGameBtn');
+            const resetGameBtn = document.getElementById('resetGameBtn');
+            const levelDisplay = document.getElementById('levelDisplay');
+            const timerDisplay = document.getElementById('timerDisplay');
+            const binaryCharDisplay = document.getElementById('binaryCharDisplay');
+            const decimalInputForGame = document.getElementById('decimalInputForGame');
+            const submitDecimalBtn = document.getElementById('submitDecimalBtn');
+            const decodedPhraseDisplay = document.getElementById('decodedPhraseDisplay');
+            const gameFeedback = document.getElementById('gameFeedback');
+            const congratulationsMessage = document.getElementById('congratulationsMessage');
+            const nextLevelBtn = document.getElementById('nextLevelBtn');
+            const asciiModal = document.getElementById('ascii-modal');
+            const asciiTableContent = document.getElementById('ascii-table-content');
+
+            const GRID_SIZE = 8;
+            const PIXEL_SIZE_FOR_DOWNLOAD = 40; // Tamanho de cada pixel na imagem de download
+            const colorPalette = [
+                { hex: '#000000', binary: '000' }, { hex: '#FFFFFF', binary: '001' },
+                { hex: '#FF0000', binary: '010' }, { hex: '#00FF00', binary: '011' },
+                { hex: '#0000FF', binary: '100' }, { hex: '#FFFF00', binary: '101' },
+                { hex: '#FF00FF', binary: '110' }, { hex: '#00FFFF', binary: '111' }
+            ];
+            let selectedColorHex = colorPalette[0].hex;
+            let selectedColorBinary = colorPalette[0].binary;
+
+            function createBinaryVisualization(container, binaryString, showPlaceValue = true) {
+                container.innerHTML = '';
+                for (let i = 0; i < binaryString.length; i++) {
+                    const bit = binaryString[i];
+                    const bitContainer = document.createElement('div');
+                    bitContainer.className = 'bit-container';
+
+                    const bitValueElement = document.createElement('div');
+                    bitValueElement.className = 'bit-value';
+                    bitValueElement.textContent = bit;
+
+                    const bulbElement = document.createElement('div');
+                    bulbElement.className = 'bulb ' + (bit === '1' ? 'on' : 'off');
+                    
+                    bitContainer.appendChild(bitValueElement);
+                    bitContainer.appendChild(bulbElement);
+
+                    if (showPlaceValue) {
+                        const placeValue = Math.pow(2, binaryString.length - 1 - i);
+                        const placeValueElement = document.createElement('div');
+                        placeValueElement.className = 'place-value';
+                        placeValueElement.textContent = placeValue;
+                        bitContainer.appendChild(placeValueElement);
+                    }
+                    
+                    container.appendChild(bitContainer);
+                }
+            }
+
+            // Binary Calculator Functions
+            function isValidBinary(binaryString) {
+                return /^[01]+$/.test(binaryString);
+            }
+
+            function binaryToDecimal(binaryString) {
+                return parseInt(binaryString, 2);
+            }
+
+            function decimalToBinary(decimalNumber) {
+                if (decimalNumber < 0) {
+                    return "-" + (Math.abs(decimalNumber)).toString(2);
+                }
+                return decimalNumber.toString(2);
+            }
+
+            function calculateBinary(operation) {
+                const bin1 = binaryInput1.value.trim();
+                const bin2 = binaryInput2.value.trim();
+
+                if (!isValidBinary(bin1) || !isValidBinary(bin2)) {
+                    if (typeof M !== 'undefined' && M.toast) { // Check if M and M.toast exist
+                        M.toast({html: 'Por favor, insira números binários válidos (apenas 0s e 1s).'});
+                    } else {
+                        alert('Por favor, insira números binários válidos (apenas 0s e 1s).');
+                    }
+                    binaryResult.textContent = 'Resultado: Erro';
+                    return;
+                }
+
+                let dec1 = binaryToDecimal(bin1);
+                let dec2 = binaryToDecimal(bin2);
+                let resultDecimal;
+
+                switch (operation) {
+                    case 'add':
+                        resultDecimal = dec1 + dec2;
+                        break;
+                    case 'subtract':
+                        resultDecimal = dec1 - dec2;
+                        break;
+                    case 'multiply':
+                        resultDecimal = dec1 * dec2;
+                        break;
+                    case 'divide':
+                        if (dec2 === 0) {
+                            if (typeof M !== 'undefined' && M.toast) {
+                                M.toast({html: 'Divisão por zero não é permitida.'});
+                            } else {
+                                alert('Divisão por zero não é permitida.');
+                            }
+                            binaryResult.textContent = 'Resultado: Erro';
+                            return;
+                        }
+                        resultDecimal = Math.floor(dec1 / dec2); // Integer division
+                        break;
+                    default:
+                        binaryResult.textContent = 'Resultado: Erro de Operação';
+                        return;
+                }
+                binaryResult.textContent = `Resultado: ${decimalToBinary(resultDecimal)}`;
+            }
+
+            // Image Simulator Functions
+            function initImageSimulator() {
+                colorPalette.forEach(color => {
+                    const swatch = document.createElement('div');
+                    swatch.className = 'color-swatch';
+                    swatch.style.backgroundColor = color.hex;
+                    swatch.dataset.color = color.hex;
+                    swatch.dataset.binary = color.binary;
+                    swatch.addEventListener('click', selectColor);
+                    colorPaletteContainer.appendChild(swatch);
+                });
+
+                generatePixelGrid();
+                updateBinaryOutputFromPixels();
+                
+                clearCanvasBtn.addEventListener('click', clearCanvas);
+                downloadImageBtn.addEventListener('click', downloadImage);
+                
+                colorPaletteContainer.firstChild.click();
+            }
+
+            function generatePixelGrid() {
+                pixelCanvas.innerHTML = '';
+                for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+                    const pixel = document.createElement('div');
+                    pixel.className = 'pixel';
+                    pixel.dataset.color = '#000000';
+                    pixel.dataset.binary = '000';
+                    pixel.addEventListener('click', togglePixel);
+                    pixelCanvas.appendChild(pixel);
+                }
+            }
+
+            function updateBinaryOutputFromPixels() {
+                binaryImageOutput.innerHTML = '';
+                const pixels = pixelCanvas.children;
+                for (let i = 0; i < pixels.length; i++) {
+                    const binaryChar = document.createElement('span');
+                    binaryChar.className = 'binary-char';
+                    binaryChar.textContent = pixels[i].dataset.binary || '000';
+                    binaryChar.dataset.index = i;
+                    binaryChar.addEventListener('click', toggleBinaryChar);
+                    binaryImageOutput.appendChild(binaryChar);
+                }
+            }
+
+            function togglePixel(event) {
+                const pixel = event.target;
+                pixel.style.backgroundColor = selectedColorHex;
+                pixel.dataset.color = selectedColorHex;
+                pixel.dataset.binary = selectedColorBinary;
+                updateBinaryOutputFromPixels();
+            }
+            
+            function toggleBinaryChar(event) {
+                const binaryChar = event.target;
+                const index = parseInt(binaryChar.dataset.index);
+                const pixel = pixelCanvas.children[index];
+
+                const currentColorIndex = colorPalette.findIndex(c => c.binary === binaryChar.textContent);
+                const nextColorIndex = (currentColorIndex + 1) % colorPalette.length;
+                const nextColor = colorPalette[nextColorIndex];
+
+                binaryChar.textContent = nextColor.binary;
+                pixel.style.backgroundColor = nextColor.hex;
+                pixel.dataset.color = nextColor.hex;
+                pixel.dataset.binary = nextColor.binary;
+            }
+
+            function clearCanvas() {
+                const pixels = pixelCanvas.children;
+                for (let i = 0; i < pixels.length; i++) {
+                    pixels[i].style.backgroundColor = '#000000';
+                    pixels[i].dataset.color = '#000000';
+                    pixels[i].dataset.binary = '000';
+                }
+                updateBinaryOutputFromPixels();
+            }
+
+            function selectColor(event) {
+                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+                event.target.classList.add('selected');
+                selectedColorHex = event.target.dataset.color;
+                selectedColorBinary = event.target.dataset.binary;
+            }
+
+            function downloadImage() {
+                const tempCanvas = document.createElement('canvas');
+                const ctx = tempCanvas.getContext('2d');
+                const canvasSize = GRID_SIZE * PIXEL_SIZE_FOR_DOWNLOAD;
+                tempCanvas.width = canvasSize;
+                tempCanvas.height = canvasSize;
+
+                const pixels = pixelCanvas.children;
+                for (let i = 0; i < pixels.length; i++) {
+                    const pixel = pixels[i];
+                    const x = (i % GRID_SIZE) * PIXEL_SIZE_FOR_DOWNLOAD;
+                    const y = Math.floor(i / GRID_SIZE) * PIXEL_SIZE_FOR_DOWNLOAD;
+                    ctx.fillStyle = pixel.dataset.color || '#000000';
+                    ctx.fillRect(x, y, PIXEL_SIZE_FOR_DOWNLOAD, PIXEL_SIZE_FOR_DOWNLOAD);
+                }
+
+                const link = document.createElement('a');
+                link.download = 'imagem-binaria.png';
+                link.href = tempCanvas.toDataURL('image/png');
+                link.click();
+            }
+
+            // Game Logic
+            let currentLevel = 0;
+            const phrasesForLevels = [
+                "OLA", // Level 1
+                "MUNDO", // Level 2
+                "BINARIO" // Level 3
+            ];
+            let currentPhrase = "";
+            let currentBinaryChars = [];
+            let currentCharIndex = 0;
+            let decodedPhraseArray = [];
+            let timerInterval;
+            let timeLeft = 0;
+            let gameActive = false;
+            const TIME_PER_CHARACTER = 30; // 30 seconds per character
+
+            function decimalToChar(decimalValue) {
+                return String.fromCharCode(decimalValue);
+            }
+
+            function charToDecimal(char) {
+                return char.charCodeAt(0);
+            }
+
+            function resetGame() {
+                currentLevel = 0;
+                gameActive = false;
+                congratulationsMessage.classList.add('hidden');
+                startGameBtn.classList.remove('hidden');
+                resetGameBtn.classList.add('hidden');
+                nextLevelBtn.classList.add('hidden');
+                gameFeedback.textContent = '';
+                decodedPhraseDisplay.textContent = '';
+                binaryCharDisplay.textContent = '';
+                decimalInputForGame.value = '';
+                document.getElementById('game-challenge').classList.add('hidden');
+                document.getElementById('game-progress').classList.add('hidden');
+                timerDisplay.textContent = '00:00';
+                clearInterval(timerInterval);
+            }
+
+            function startGame() {
+                resetGame(); // Reset any previous game state
+                gameActive = true;
+                currentLevel = 1;
+                startGameBtn.classList.add('hidden');
+                resetGameBtn.classList.remove('hidden');
+                document.getElementById('game-challenge').classList.remove('hidden');
+                document.getElementById('game-progress').classList.remove('hidden');
+                startLevel();
+            }
+
+            function startLevel() {
+                gameActive = true;
+                if (currentLevel > phrasesForLevels.length) {
+                    gameComplete();
+                    return;
+                }
+
+                // Ensure game challenge and progress sections are visible
+                document.getElementById('game-challenge').classList.remove('hidden');
+                document.getElementById('game-progress').classList.remove('hidden');
+
+                currentPhrase = phrasesForLevels[currentLevel - 1];
+                currentBinaryChars = currentPhrase
+                    .split('')
+                    .map(char => char.charCodeAt(0).toString(2).padStart(8, '0'));
+                currentCharIndex = 0;
+                decodedPhraseArray = Array(currentPhrase.length).fill('_');
+                gameFeedback.textContent = '';
+                decimalInputForGame.value = '';
+                if (typeof M !== 'undefined') { M.updateTextFields(); } // Added this line
+                decimalInputForGame.blur(); // Added this line
+                decimalInputForGame.focus();
+                nextLevelBtn.classList.add('hidden');
+
+                levelDisplay.textContent = `${currentLevel}/${phrasesForLevels.length}`;
+                decodedPhraseDisplay.textContent = decodedPhraseArray.join(' ');
+
+                // Start timer for the first character of the level
+                clearInterval(timerInterval);
+                timeLeft = TIME_PER_CHARACTER;
+                updateTimerDisplay();
+                timerInterval = setInterval(updateTimer, 1000);
+
+                displayCurrentCharacterChallenge();
+            }
+
+            function displayCurrentCharacterChallenge() {
+                if (currentCharIndex < currentBinaryChars.length) {
+                    binaryCharDisplay.textContent = currentBinaryChars[currentCharIndex];
+                    decimalInputForGame.value = '';
+                    if (typeof M !== 'undefined') { M.updateTextFields(); } // Added this line
+                    decimalInputForGame.blur(); // Added this line
+                    decimalInputForGame.focus();
+                    
+                    // Restart timer for the new character
+                    clearInterval(timerInterval);
+                    timeLeft = TIME_PER_CHARACTER;
+                    updateTimerDisplay();
+                    timerInterval = setInterval(updateTimer, 1000);
+
+                } else {
+                    levelComplete();
+                }
+            }
+
+            function checkDecimalInput() {
+                if (!gameActive) return;
+
+                const userInput = parseInt(decimalInputForGame.value, 10);
+                const correctDecimal = binaryToDecimal(currentBinaryChars[currentCharIndex]);
+
+                if (isNaN(userInput)) {
+                    if (typeof M !== 'undefined' && M.toast) { // Check if M and M.toast exist
+                        M.toast({html: 'Por favor, insira um número decimal.'});
+                    } else {
+                        alert('Por favor, insira um número decimal.'); // Fallback if M.toast is not available
+                    }
+                    return;
+                }
+
+                if (userInput === correctDecimal) {
+                    gameFeedback.textContent = 'Correto!';
+                    gameFeedback.style.color = 'green';
+                    decodedPhraseArray[currentCharIndex] = decimalToChar(userInput);
+                    decodedPhraseDisplay.textContent = decodedPhraseArray.join(' ');
+                    currentCharIndex++;
+                    
+                    if (currentCharIndex < currentBinaryChars.length) {
+                        displayCurrentCharacterChallenge(); // Move to next character, which restarts timer
+                    }
+                    else {
+                        levelComplete(); // All characters in phrase decoded
+                    }
+                } else {
+                    gameFeedback.textContent = 'Incorreto! Tente novamente.';
+                    gameFeedback.style.color = 'red';
+                    decimalInputForGame.value = '';
+                    if (typeof M !== 'undefined') { M.updateTextFields(); } // Added this line
+                    decimalInputForGame.blur(); // Added this line
+                    decimalInputForGame.focus();
+                }
+            }
+
+            function levelComplete() {
+                clearInterval(timerInterval);
+                gameFeedback.textContent = `Nível ${currentLevel} Completo!`
+                gameFeedback.style.color = 'var(--accent-color)';
+                gameActive = false;
+
+                if (currentLevel < phrasesForLevels.length) {
+                    nextLevelBtn.classList.remove('hidden');
+                } else {
+                    gameComplete();
+                }
+            }
+
+            function gameComplete() {
+                clearInterval(timerInterval);
+                congratulationsMessage.textContent = 'Parabéns! Você é um Mestre Binário!';
+                congratulationsMessage.classList.remove('hidden');
+                resetGameBtn.classList.remove('hidden');
+                nextLevelBtn.classList.add('hidden');
+                gameFeedback.textContent = '';
+            }
+
+            function updateTimer() {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    gameOver();
+                }
+            }
+
+            function updateTimerDisplay() {
+                const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                const seconds = (timeLeft % 60).toString().padStart(2, '0');
+                timerDisplay.textContent = `${minutes}:${seconds}`;
+            }
+
+            function gameOver() {
+                clearInterval(timerInterval);
+                gameActive = false;
+                gameFeedback.textContent = 'Tempo Esgotado! Fim de Jogo.';
+                gameFeedback.style.color = 'red';
+                resetGameBtn.classList.remove('hidden');
+                document.getElementById('game-challenge').classList.add('hidden');
+                nextLevelBtn.classList.add('hidden');
+            }
+
+            // ASCII Table Generation
+            function generateAsciiTable() {
+                let tableHtml = `
+                    <table class="striped highlight">
+                        <thead>
+                            <tr>
+                                <th>Caractere</th>
+                                <th>Decimal</th>
+                                <th>Binário (8-bit)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                // Printable ASCII characters from 32 (space) to 126 (tilde)
+                for (let i = 32; i <= 126; i++) {
+                    const char = String.fromCharCode(i);
+                    const binary = i.toString(2).padStart(8, '0');
+                    tableHtml += `
+                        <tr>
+                            <td>${char}</td>
+                            <td>${i}</td>
+                            <td>${binary}</td>
+                        </tr>
+                    `;
+                }
+                tableHtml += `
+                        </tbody>
+                    </table>
+                `;
+                asciiTableContent.innerHTML = tableHtml;
+            }
+
+            // Event Listeners for Binary Calculator
+            addBtn.addEventListener('click', () => calculateBinary('add'));
+            subtractBtn.addEventListener('click', () => calculateBinary('subtract'));
+            multiplyBtn.addEventListener('click', () => calculateBinary('multiply'));
+            divideBtn.addEventListener('click', () => calculateBinary('divide'));
+
+            // Event Listeners for other simulators
+            
+            function updateCharVisualizer() {
+                const text = charInput.value;
+                if (!text) {
+                    charBinaryOutput.innerHTML = '';
+                    return;
+                }
+
+                const binaryStrings = text.split('').map(char => {
+                    const binary = char.charCodeAt(0).toString(2).padStart(8, '0');
+                    return `<span>${binary}</span>`;
+                });
+
+                charBinaryOutput.innerHTML = binaryStrings.join(' ');
+            }
+            
+            charInput.addEventListener('input', updateCharVisualizer);
+
+            // Game Event Listeners
+            toggleGameBtn.addEventListener('click', () => {
+                textSimulatorNormal.classList.toggle('hidden');
+                gameContainer.classList.toggle('hidden');
+                if (!gameContainer.classList.contains('hidden')) {
+                    resetGame(); // Ensure game is reset when toggled into view
+                } else {
+                    // If toggling back to normal simulator, ensure charInput is updated
+                    charInput.value = '';
+                    charBinaryOutput.textContent = '';
+                }
+            });
+            startGameBtn.addEventListener('click', startGame);
+            submitDecimalBtn.addEventListener('click', checkDecimalInput);
+            decimalInputForGame.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    checkDecimalInput();
+                }
+            });
+            nextLevelBtn.addEventListener('click', () => {
+                currentLevel++;
+                startLevel();
+            });
+            resetGameBtn.addEventListener('click', resetGame);
+
+            // Inicialização
+            startNewNumberGame();
+            initImageSimulator();
+            resetGame(); // Initial reset to set up game UI correctly
+            generateAsciiTable(); // Generate ASCII table on load
+            // M.Modal.init(asciiModal); // Moved inside setTimeout
+        });
+    </script>
+
+</body>
+</html>

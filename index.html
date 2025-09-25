@@ -407,27 +407,7 @@
                 <button id="nextNumberGameBtn" class="btn-large waves-effect waves-light green"><i class="material-icons left">arrow_forward</i>Próximo</button>
             </div>
 
-            <div class="divider" style="margin: 40px 0;"></div>
 
-            <h3 class="center-align">Calculadora Binária</h3>
-            <p class="center-align flow-text">Realize operações básicas com números binários.</p>
-            <div class="row">
-                <div class="input-field col s12 m5">
-                    <input id="binaryInput1" type="text" value="0">
-                    <label for="binaryInput1">Binário 1</label>
-                </div>
-                <div class="input-field col s12 m5 offset-m2">
-                    <input id="binaryInput2" type="text" value="0">
-                    <label for="binaryInput2">Binário 2</label>
-                </div>
-            </div>
-            <div class="row center-align">
-                <button id="addBtn" class="btn-floating btn-large waves-effect waves-light blue"><i class="material-icons">add</i></button>
-                <button id="subtractBtn" class="btn-floating btn-large waves-effect waves-light blue"><i class="material-icons">remove</i></button>
-                <button id="multiplyBtn" class="btn-floating btn-large waves-effect waves-light blue"><i class="material-icons">close</i></button>
-                <button id="divideBtn" class="btn-floating btn-large waves-effect waves-light blue"><i class="material-icons">divide</i></button>
-            </div>
-            <div class="binary-calculator-result" id="binaryResult">Resultado: 0</div>
         </div>
 
         <!-- Simulador de Texto / Jogo -->
@@ -587,7 +567,7 @@
             let userBinaryArray = [0, 0, 0, 0, 0, 0, 0, 0];
 
             function startNewNumberGame() {
-                targetNumber = Math.floor(Math.random() * 256);
+                targetNumber = Math.floor(Math.random() * 50) + 1;
                 targetNumberDisplay.textContent = targetNumber;
                 userBinaryArray = [0, 0, 0, 0, 0, 0, 0, 0];
                 numberGameFeedback.textContent = '';
@@ -625,14 +605,7 @@
             nextNumberGameBtn.addEventListener('click', startNewNumberGame);
             // --- End of Number Game Logic ---
 
-            // Binary Calculator elements
-            const binaryInput1 = document.getElementById('binaryInput1');
-            const binaryInput2 = document.getElementById('binaryInput2');
-            const addBtn = document.getElementById('addBtn');
-            const subtractBtn = document.getElementById('subtractBtn');
-            const multiplyBtn = document.getElementById('multiplyBtn');
-            const divideBtn = document.getElementById('divideBtn');
-            const binaryResult = document.getElementById('binaryResult');
+
 
             // Game elements
             const gameContainer = document.getElementById('game-container');
@@ -692,67 +665,8 @@
                 }
             }
 
-            // Binary Calculator Functions
-            function isValidBinary(binaryString) {
-                return /^[01]+$/.test(binaryString);
-            }
-
             function binaryToDecimal(binaryString) {
                 return parseInt(binaryString, 2);
-            }
-
-            function decimalToBinary(decimalNumber) {
-                if (decimalNumber < 0) {
-                    return "-" + (Math.abs(decimalNumber)).toString(2);
-                }
-                return decimalNumber.toString(2);
-            }
-
-            function calculateBinary(operation) {
-                const bin1 = binaryInput1.value.trim();
-                const bin2 = binaryInput2.value.trim();
-
-                if (!isValidBinary(bin1) || !isValidBinary(bin2)) {
-                    if (typeof M !== 'undefined' && M.toast) { // Check if M and M.toast exist
-                        M.toast({html: 'Por favor, insira números binários válidos (apenas 0s e 1s).'});
-                    } else {
-                        alert('Por favor, insira números binários válidos (apenas 0s e 1s).');
-                    }
-                    binaryResult.textContent = 'Resultado: Erro';
-                    return;
-                }
-
-                let dec1 = binaryToDecimal(bin1);
-                let dec2 = binaryToDecimal(bin2);
-                let resultDecimal;
-
-                switch (operation) {
-                    case 'add':
-                        resultDecimal = dec1 + dec2;
-                        break;
-                    case 'subtract':
-                        resultDecimal = dec1 - dec2;
-                        break;
-                    case 'multiply':
-                        resultDecimal = dec1 * dec2;
-                        break;
-                    case 'divide':
-                        if (dec2 === 0) {
-                            if (typeof M !== 'undefined' && M.toast) {
-                                M.toast({html: 'Divisão por zero não é permitida.'});
-                            } else {
-                                alert('Divisão por zero não é permitida.');
-                            }
-                            binaryResult.textContent = 'Resultado: Erro';
-                            return;
-                        }
-                        resultDecimal = Math.floor(dec1 / dec2); // Integer division
-                        break;
-                    default:
-                        binaryResult.textContent = 'Resultado: Erro de Operação';
-                        return;
-                }
-                binaryResult.textContent = `Resultado: ${decimalToBinary(resultDecimal)}`;
             }
 
             // --- Jogo: Arte Binária ---
@@ -1181,11 +1095,7 @@
                 asciiTableContent.innerHTML = tableHtml;
             }
 
-            // Event Listeners for Binary Calculator
-            addBtn.addEventListener('click', () => calculateBinary('add'));
-            subtractBtn.addEventListener('click', () => calculateBinary('subtract'));
-            multiplyBtn.addEventListener('click', () => calculateBinary('multiply'));
-            divideBtn.addEventListener('click', () => calculateBinary('divide'));
+
 
             // Event Listeners for other simulators
             
